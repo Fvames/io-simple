@@ -9,7 +9,7 @@ import java.nio.IntBuffer;
  * @version 2019/6/25 20:02
  */
 
-public class BufferSlice {
+public class BufferSliceRW {
 
     public static void main(String[] args) {
 

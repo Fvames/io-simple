@@ -31,12 +31,23 @@ public class BufferDemo {
 
 
         // 判断是否有数据
+        int i = 0;
         while (byteBuffer.remaining() > 0) {
+            if (i++ == 2) {
+                byteBuffer.mark(); // todo 作用
+                printBufferInfo("调用 mark 方法", byteBuffer);
+            }
+
+
             // 获取数据
             System.out.println((char) byteBuffer.get());
         }
 
         printBufferInfo("调用 get 方法", byteBuffer);
+
+        // 清除释放 buffer
+        byteBuffer.reset(); // 没有调用过 mark 方法时会报错
+        printBufferInfo("调用 reset 方法", byteBuffer);
 
         // 清除释放 buffer
         byteBuffer.clear();
