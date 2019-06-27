@@ -3,10 +3,7 @@ package dev.fvames.nio.chat;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.nio.channels.SocketChannel;
+import java.nio.channels.*;
 import java.nio.charset.Charset;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -61,8 +58,10 @@ public class NIOChatServer {
             Iterator<SelectionKey> iterator = selectionKeys.iterator();
             while (iterator.hasNext()) {
 
-                process(iterator.next());
+                SelectionKey next = iterator.next();
                 iterator.remove();
+
+                process(next);
             }
         }
     }
@@ -114,6 +113,7 @@ public class NIOChatServer {
 
                 String[] arrayContent = sb.toString().split(USER_CONTENT_SPLIT);
 
+                // 首次进入
                 if (null != arrayContent && arrayContent.length == 1) {
 
                     // 重名检查
@@ -124,7 +124,7 @@ public class NIOChatServer {
                     } else {
 
                         users.add(nickName);
-                        int onlineCount = onlineCount();
+                        long onlineCount = onlineCount();
                         String message = String.format("欢迎 %s 进入xxx，当前在线人数：%s ", nickName, onlineCount);
                         // 通知所有人员
                         broadCast(null, message);
@@ -145,12 +145,26 @@ public class NIOChatServer {
         }
     }
 
-    private void broadCast(SocketChannel client, String message) {
+    private void broadCast(SocketChannel client, String message) throws IOException {
 
+        for (SelectionKey key : selector.keys()) {
+
+            Channel channel = key.channel();
+            if (channel instanceof SocketChannel && channel != client) {
+
+                ((SocketChannel) channel).write(charset.encode(message));
+            }
+        }
     }
 
-    private int onlineCount() {
-        return 0;
+    // 在线人数
+    private long onlineCount() {
+
+        return selector.keys().stream().filter(p -> p.channel() instanceof SocketChannel).count();
+    }
+
+    public static void main(String[] args) throws IOException {
+        new NIOChatServer(8080).listen();
     }
 
 }
