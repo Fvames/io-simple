@@ -94,19 +94,23 @@ public class NIOChatServer {
             ByteBuffer byteBuffer = ByteBuffer.allocate(1024);
             StringBuilder sb = new StringBuilder();
 
-            while (socketChannel.read(byteBuffer) > 0) {
+            try {
 
-                byteBuffer.flip();
-                sb.append(charset.decode(byteBuffer));
-            }
+                while (socketChannel.read(byteBuffer) > 0) {
 
-            key.interestOps(SelectionKey.OP_READ);
+                    byteBuffer.flip();
+                    sb.append(charset.decode(byteBuffer));
+                }
 
-            // 关闭通道
-            key.cancel();
-            if (key.channel() != null) {
+                key.interestOps(SelectionKey.OP_READ);
+            } catch (IOException e) {
 
-                key.channel().close();
+                // 关闭通道
+                key.cancel();
+                if (key.channel() != null) {
+
+                    key.channel().close();
+                }
             }
 
             if (sb.length() > 0) {
@@ -147,12 +151,13 @@ public class NIOChatServer {
 
     private void broadCast(SocketChannel client, String message) throws IOException {
 
+        //广播数据到所有的SocketChannel中
         for (SelectionKey key : selector.keys()) {
-
-            Channel channel = key.channel();
-            if (channel instanceof SocketChannel && channel != client) {
-
-                ((SocketChannel) channel).write(charset.encode(message));
+            Channel targetchannel = key.channel();
+            //如果client不为空，不回发给发送此内容的客户端
+            if (targetchannel instanceof SocketChannel && targetchannel != client) {
+                SocketChannel target = (SocketChannel) targetchannel;
+                target.write(charset.encode(message));
             }
         }
     }

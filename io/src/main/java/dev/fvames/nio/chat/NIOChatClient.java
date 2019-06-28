@@ -98,13 +98,13 @@ public class NIOChatClient {
 
         @Override
         public void run() {
+
             Scanner scanner = new Scanner(System.in);
             while (scanner.hasNextLine()) {
 
                 String nextLine = scanner.nextLine();
                 if (null == nextLine || "".equals(nextLine)) {
 
-                    System.out.println("请输入用户名");
                     continue;
                 }
                 if (nickName == "") {
